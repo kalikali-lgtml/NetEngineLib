@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>NetEngine · C++ Networking Library</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#040c18;--s1:#071020;--s2:#0c1830;--s3:#122040;
+  --ln:#1a3050;--ink:#c8daf0;--dim:#4a6888;--muted:#2a4060;
+  --bl:#3d8eff;--bl8:rgba(61,142,255,.08);--bl15:rgba(61,142,255,.15);--bl25:rgba(61,142,255,.25);
+  --gn:#2dd4a0;--gn8:rgba(45,212,160,.08);
+  --pu:#a78bfa;--pu8:rgba(167,139,250,.08);
+  --or:#f4934a;--or8:rgba(244,147,74,.08);
+  --cy:#22d3ee;--cy8:rgba(34,211,238,.08);
+  --re:#f87171;
+  --r4:4px;--r6:6px;--r8:8px;--r12:12px;
+  color-scheme:dark;
+}
+:root[data-t=light]{
+  --bg:#f1f5fb;--s1:#fff;--s2:#e8eef9;--s3:#dce4f0;
+  --ln:#c5d2e8;--ink:#0b1829;--dim:#607898;--muted:#b8c8dc;
+  color-scheme:light;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:66px}
+body{background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.6;overflow-x:hidden;font-size:15px}
+code,.mono{font-family:'JetBrains Mono',monospace}
+a:focus-visible,button:focus-visible{outline:2px solid var(--bl);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* header */
+header{position:sticky;top:0;z-index:50;height:58px;border-bottom:1px solid var(--ln);background:color-mix(in srgb,var(--bg) 85%,transparent);backdrop-filter:blur(16px);padding-top:env(safe-area-inset-top,0)}
+.hbar{display:flex;align-items:center;gap:10px;padding:0 18px;height:58px;max-width:1500px;margin:auto}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1rem;color:var(--ink);text-decoration:none;flex-shrink:0}
+.logo-icon{width:28px;height:28px;border-radius:6px;background:linear-gradient(135deg,#2860c8 0%,var(--bl) 100%);display:grid;place-items:center;flex-shrink:0}
+.logo-icon svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.vbadge{font-family:'JetBrains Mono',monospace;font-size:.68rem;padding:2px 8px;border-radius:var(--r4);background:var(--bl8);color:var(--bl);border:1px solid var(--bl25);letter-spacing:.03em;flex-shrink:0}
+.search-wrap{flex:1;max-width:360px;margin-left:auto;position:relative}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;fill:none;stroke:var(--dim);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+#q{width:100%;height:34px;padding:0 68px 0 32px;border-radius:var(--r6);border:1px solid var(--ln);background:var(--s1);color:var(--ink);font:inherit;font-size:.82rem;-webkit-appearance:none}
+#q:focus{border-color:var(--bl);box-shadow:0 0 0 3px var(--bl8);outline:none}
+#rc{position:absolute;right:30px;top:50%;transform:translateY(-50%);font-size:.65rem;color:var(--dim);pointer-events:none;font-family:'JetBrains Mono',monospace}
+#scl{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:var(--r4);border:0;background:var(--s2);color:var(--dim);cursor:pointer;display:none;align-items:center;justify-content:center;font-size:.9rem}
+.hbtn{height:30px;padding:0 10px;border-radius:var(--r6);border:1px solid var(--ln);background:transparent;color:var(--dim);cursor:pointer;font:inherit;font-size:.8rem;display:inline-flex;align-items:center;gap:5px;flex-shrink:0;transition:border-color .15s,color .15s}
+.hbtn:hover{color:var(--ink);border-color:var(--dim)}
+.hbtn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#mb{display:none}
+
+/* layout */
+.wrap{display:grid;grid-template-columns:220px 1fr;max-width:1500px;margin:auto}
+
+/* sidebar */
+nav{position:sticky;top:58px;height:calc(100vh - 58px);overflow-y:auto;padding:12px 8px 60px;border-right:1px solid var(--ln);scrollbar-width:thin;scrollbar-color:var(--muted) transparent}
+nav h6{font-size:.64rem;font-weight:600;letter-spacing:.12em;color:var(--dim);margin:14px 10px 4px;text-transform:uppercase}
+nav a{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:var(--r6);color:var(--ink);text-decoration:none;font-size:.82rem;font-weight:500;transition:background .12s}
+nav a:hover{background:var(--s2)}
+nav a.on{background:var(--bl8);color:var(--bl);border-left:2px solid var(--bl);padding-left:8px}
+nav .sf{padding-left:30px;font-size:.74rem;color:var(--dim);font-weight:400;font-family:'JetBrains Mono',monospace}
+nav .sf:hover{color:var(--ink)}
+nav .sf.on{color:var(--bl)}
+
+/* main */
+main{padding:28px clamp(14px,3.5vw,44px) 80px;min-width:0}
+
+/* hero */
+.hero{position:relative;overflow:hidden;border-radius:var(--r12);margin-bottom:18px;background:var(--s1);border:1px solid var(--ln)}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 50% 80% at 100% 50%,rgba(61,142,255,.07),transparent),radial-gradient(ellipse 60% 60% at 0% 0%,rgba(167,139,250,.05),transparent),radial-gradient(ellipse 40% 50% at 50% 100%,rgba(34,211,238,.04),transparent);pointer-events:none}
+.hero-g{display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:center;padding:clamp(18px,3.5vw,38px)}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:600;letter-spacing:.08em;color:var(--bl);margin-bottom:10px;padding:3px 10px;border-radius:20px;background:var(--bl8);border:1px solid var(--bl15)}
+.hero h1{font-size:clamp(2rem,4vw,2.9rem);font-weight:800;color:var(--ink);line-height:1.15;letter-spacing:-.02em;margin-bottom:8px}
+.hero p{color:var(--dim);font-size:.9rem;max-width:480px;line-height:1.65;margin-bottom:16px}
+.htags{display:flex;flex-wrap:wrap;gap:6px}
+.htag{font-family:'JetBrains Mono',monospace;font-size:.68rem;padding:3px 9px;border-radius:var(--r4);border:1px solid var(--ln);background:var(--s2);color:var(--dim)}
+
+/* stats */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-bottom:18px}
+.stat{background:var(--s1);border:1px solid var(--ln);border-radius:var(--r8);padding:12px 14px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--bl),var(--cy))}
+.stat strong{display:block;font-size:1.6rem;font-weight:800;color:var(--ink);line-height:1.1;letter-spacing:-.02em}
+.stat span{color:var(--dim);font-size:.72rem;font-weight:500}
+
+/* module sections */
+.mod{margin-top:44px;scroll-margin-top:66px}
+.mhead{display:flex;align-items:center;gap:14px;margin-bottom:10px;padding-bottom:12px;border-bottom:1px solid var(--ln)}
+.mic{width:40px;height:40px;border-radius:var(--r8);background:var(--s2);border:1px solid var(--ln);display:grid;place-items:center;font-size:1.1rem;flex-shrink:0}
+.minfo h2{font-size:1.25rem;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+.minfo .inc{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--bl);margin-top:2px}
+.mdesc{color:var(--dim);max-width:720px;margin-bottom:14px;font-size:.88rem;line-height:1.65}
+
+/* typedef/struct */
+.typedef{background:var(--s1);border:1px solid var(--ln);border-radius:var(--r8);padding:12px 14px;margin-bottom:12px}
+.tdlabel{font-size:.68rem;color:var(--dim);margin-bottom:6px;font-family:'JetBrains Mono',monospace}
+.tdlabel span{color:var(--pu)}
+.ev{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.ev span{font-family:'JetBrains Mono',monospace;font-size:.72rem;padding:2px 9px;border-radius:var(--r4);background:var(--pu8);border:1px solid color-mix(in srgb,var(--pu) 25%,transparent);color:var(--pu)}
+.sfields{margin-top:8px;display:grid;grid-template-columns:auto 1fr;gap:3px 14px;font-family:'JetBrains Mono',monospace;font-size:.75rem}
+.sf-t{color:var(--pu)}.sf-d{color:var(--dim)}
+
+/* fn group */
+.fng{font-size:.68rem;font-weight:600;letter-spacing:.1em;color:var(--dim);margin:16px 0 7px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.fng::after{content:'';flex:1;height:1px;background:var(--ln)}
+
+/* function cards */
+.fn{background:var(--s1);border:1px solid var(--ln);border-radius:var(--r8);margin-bottom:8px;overflow:hidden;transition:border-color .15s,box-shadow .15s;display:flex}
+.fn:hover{border-color:color-mix(in srgb,var(--bl) 40%,var(--ln));box-shadow:0 2px 16px rgba(61,142,255,.06)}
+.fnbar{width:3px;flex-shrink:0}
+.fnbar.c-bl{background:var(--bl)}.fnbar.c-gn{background:var(--gn)}.fnbar.c-or{background:var(--or)}.fnbar.c-pu{background:var(--pu)}.fnbar.c-cy{background:var(--cy)}.fnbar.c-wh{background:var(--muted)}
+.fnbd{flex:1;padding:12px 14px;min-width:0}
+.fntop{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:4px}
+.fnname{font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:500;color:var(--ink)}
+.fnst{font-size:.62rem;padding:1px 6px;border-radius:3px;background:var(--bl8);color:var(--bl);border:1px solid var(--bl25);font-family:'JetBrains Mono',monospace}
+.fnret{font-family:'JetBrains Mono',monospace;font-size:.7rem;padding:1px 8px;border-radius:3px;margin-left:auto}
+.fnret.gb{background:var(--gn8);color:var(--gn);border:1px solid color-mix(in srgb,var(--gn) 25%,transparent)}
+.fnret.vb{background:color-mix(in srgb,var(--dim) 10%,transparent);color:var(--dim);border:1px solid color-mix(in srgb,var(--dim) 20%,transparent)}
+.fnret.ob{background:var(--or8);color:var(--or);border:1px solid color-mix(in srgb,var(--or) 25%,transparent)}
+.fnret.pb{background:var(--pu8);color:var(--pu);border:1px solid color-mix(in srgb,var(--pu) 25%,transparent)}
+.fnret.cb{background:var(--cy8);color:var(--cy);border:1px solid color-mix(in srgb,var(--cy) 25%,transparent)}
+.fnsig{font-family:'JetBrains Mono',monospace;font-size:.77rem;background:var(--bg);border:1px solid var(--ln);border-radius:var(--r6);padding:9px 12px;margin:6px 0 9px;overflow-x:auto;white-space:pre;line-height:1.6}
+.fndesc{font-size:.85rem;color:var(--dim);margin-bottom:9px;line-height:1.6}
+
+/* param table */
+.pt-wrap{overflow-x:auto;border:1px solid var(--ln);border-radius:var(--r6)}
+table.pt{width:100%;border-collapse:collapse;font-size:.78rem}
+table.pt th{text-align:left;padding:6px 11px;color:var(--dim);font-weight:500;border-bottom:1px solid var(--ln);background:var(--s2);font-size:.67rem;letter-spacing:.08em;text-transform:uppercase}
+table.pt td{padding:6px 11px;border-bottom:1px solid color-mix(in srgb,var(--ln) 50%,transparent);vertical-align:top}
+table.pt tr:last-child td{border:none}
+.ty{color:var(--pu);font-family:'JetBrains Mono',monospace;font-size:.74rem;white-space:nowrap}
+.pn{color:var(--ink);font-family:'JetBrains Mono',monospace;font-weight:500}
+.di{font-size:.8rem;color:var(--dim)}
+.dr{font-size:.64rem;padding:1px 7px;border-radius:3px;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.dr.in{background:var(--bl8);color:var(--bl);border:1px solid var(--bl25)}
+.dr.out{background:var(--or8);color:var(--or);border:1px solid color-mix(in srgb,var(--or) 25%,transparent)}
+
+/* notes */
+.note{display:flex;gap:8px;padding:8px 12px;border-radius:var(--r6);font-size:.82rem;margin:9px 0;line-height:1.55}
+.note.warn{background:var(--or8);border:1px solid color-mix(in srgb,var(--or) 22%,transparent);color:color-mix(in srgb,var(--or) 70%,var(--ink))}
+.note.info{background:var(--bl8);border:1px solid var(--bl25);color:color-mix(in srgb,var(--bl) 70%,var(--ink))}
+.note svg{flex-shrink:0;width:14px;height:14px;margin-top:2px}
+
+/* code blocks */
+.cb{border-radius:var(--r8);overflow:hidden;border:1px solid var(--ln);margin:12px 0}
+.cbh{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:var(--s2);font-size:.7rem;color:var(--dim)}
+.cbh .file{font-family:'JetBrains Mono',monospace;color:var(--dim)}
+.cpc{background:transparent;border:1px solid var(--ln);color:var(--dim);border-radius:var(--r4);padding:2px 8px;cursor:pointer;font:inherit;font-size:.68rem;display:inline-flex;align-items:center;gap:4px;transition:color .12s,border-color .12s}
+.cpc:hover{color:var(--ink);border-color:var(--dim)}
+.cpc svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+pre{margin:0;padding:12px 14px;overflow-x:auto;background:var(--bg);line-height:1.75;font-size:.78rem;color:#a8c0d8;font-family:'JetBrains Mono',monospace}
+.kw{color:#7cb4f8}.ty2{color:#bb96fc}.fn2{color:#6dcef8}.st2{color:#7de4b4}.cm2{color:#3d6080;font-style:italic}.nm2{color:#fbbf24}
+
+/* search empty */
+#empty{display:none;text-align:center;color:var(--dim);padding:50px;font-size:.9rem}
+footer{margin-top:36px;padding-top:14px;border-top:1px solid var(--ln);color:var(--dim);font-size:.75rem;text-align:center}
+
+/* responsive */
+@media(max-width:860px){.wrap{grid-template-columns:1fr}nav{position:fixed;inset:0 0 0 auto;width:240px;z-index:40;background:var(--bg);transform:translateX(100%);transition:transform .2s;top:0;height:100%;padding-top:calc(14px + env(safe-area-inset-top,0))}nav.open{transform:none}#mb{display:inline-flex!important}.hero-g{grid-template-columns:1fr}.arch-dia{display:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+<symbol id="i-net" viewBox="0 0 24 24"><rect x="2" y="2" width="6" height="4" rx="1"/><rect x="16" y="2" width="6" height="4" rx="1"/><rect x="9" y="10" width="6" height="4" rx="1"/><rect x="2" y="18" width="6" height="4" rx="1"/><rect x="16" y="18" width="6" height="4" rx="1"/><path d="M5 6v3h7M19 6v3h-7M12 14v4M5 18V14h7M19 18V14h-7"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 13A9 9 0 1111 3a7 7 0 0010 10z"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4l1.4-1.4M17 7l1.4-1.4"/></symbol>
+<symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></symbol>
+<symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.6L2 20h20L13.7 3.6a2 2 0 00-3.4 0z"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+</defs></svg>
+
+<header>
+<div class="hbar">
+  <button class="hbtn" id="mb" aria-label="Toggle nav"><svg><use href="#i-menu"/></svg></button>
+  <a class="logo" href="#top">
+    <span class="logo-icon"><svg><use href="#i-net"/></svg></span>
+    NetEngine
+  </a>
+  <span class="vbadge">C++17 · Windows</span>
+  <div class="search-wrap">
+    <svg><use href="#i-search"/></svg>
+    <input id="q" type="text" inputmode="search" autocomplete="off" spellcheck="false" placeholder="Search functions… (/)">
+    <span id="rc"></span>
+    <button id="scl" aria-label="Clear">×</button>
+  </div>
+  <button class="hbtn" id="thm" aria-label="Toggle theme"><svg><use href="#i-moon"/></svg></button>
+</div>
+</header>
+
+<div class="wrap">
+<nav id="nav"></nav>
+<main id="main">
+<div id="top">
+  <div class="hero">
+    <div class="hero-g">
+      <div>
+        <div class="hero-eyebrow">API Reference</div>
+        <h1>NetEngine</h1>
+        <p>Windows TCP networking library — socket lifecycle, packet framing, protocol validation, and session management in modern C++17.</p>
+        <div class="htags">
+          <span class="htag">Winsock 2.2</span>
+          <span class="htag">ProtocolHeader</span>
+          <span class="htag">Session Management</span>
+          <span class="htag">Move-only Socket</span>
+          <span class="htag">RAII</span>
+        </div>
+      </div>
+      <!-- Architecture diagram -->
+      <svg class="arch-dia" viewBox="0 0 290 300" width="290" height="300">
+        <defs>
+          <linearGradient id="g-app" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#2860c8"/><stop offset="100%" stop-color="#3d8eff"/></linearGradient>
+          <marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0 1l5 2-5 2z" fill="#2a4060"/></marker>
+        </defs>
+        <!-- Layer labels -->
+        <text x="10" y="10" font-family="JetBrains Mono,monospace" font-size="8" fill="#2a4060" letter-spacing="1">APPLICATION</text>
+        <rect x="10" y="14" width="270" height="30" rx="5" fill="rgba(61,142,255,.12)" stroke="#3d8eff" stroke-width="1"/>
+        <text x="145" y="34" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#3d8eff" text-anchor="middle">Your Application</text>
+
+        <text x="10" y="60" font-family="JetBrains Mono,monospace" font-size="8" fill="#2a4060" letter-spacing="1">CORE</text>
+        <rect x="10" y="64" width="82" height="28" rx="5" fill="rgba(167,139,250,.1)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="51" y="82" font-family="Inter,sans-serif" font-size="10.5" font-weight="500" fill="#a78bfa" text-anchor="middle">Socket</text>
+        <rect x="104" y="64" width="82" height="28" rx="5" fill="rgba(167,139,250,.1)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="145" y="82" font-family="Inter,sans-serif" font-size="10.5" font-weight="500" fill="#a78bfa" text-anchor="middle">Packet</text>
+        <rect x="198" y="64" width="82" height="28" rx="5" fill="rgba(167,139,250,.1)" stroke="#a78bfa" stroke-width="1"/>
+        <text x="239" y="82" font-family="Inter,sans-serif" font-size="10.5" font-weight="500" fill="#a78bfa" text-anchor="middle">Address</text>
+
+        <text x="10" y="110" font-family="JetBrains Mono,monospace" font-size="8" fill="#2a4060" letter-spacing="1">PROTOCOL</text>
+        <rect x="10" y="114" width="130" height="28" rx="5" fill="rgba(34,211,238,.08)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="75" y="132" font-family="Inter,sans-serif" font-size="10" font-weight="500" fill="#22d3ee" text-anchor="middle">ProtocolSerializer</text>
+        <rect x="150" y="114" width="130" height="28" rx="5" fill="rgba(34,211,238,.08)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="215" y="132" font-family="Inter,sans-serif" font-size="10" font-weight="500" fill="#22d3ee" text-anchor="middle">ProtocolValidator</text>
+        <rect x="80" y="152" width="130" height="28" rx="5" fill="rgba(34,211,238,.08)" stroke="#22d3ee" stroke-width="1"/>
+        <text x="145" y="170" font-family="Inter,sans-serif" font-size="10" font-weight="500" fill="#22d3ee" text-anchor="middle">ProtocolHeader</text>
+
+        <text x="10" y="198" font-family="JetBrains Mono,monospace" font-size="8" fill="#2a4060" letter-spacing="1">UTILITIES</text>
+        <rect x="10" y="202" width="80" height="28" rx="5" fill="rgba(45,212,160,.08)" stroke="#2dd4a0" stroke-width="1"/>
+        <text x="50" y="220" font-family="Inter,sans-serif" font-size="10.5" font-weight="500" fill="#2dd4a0" text-anchor="middle">Endian</text>
+        <rect x="102" y="202" width="86" height="28" rx="5" fill="rgba(45,212,160,.08)" stroke="#2dd4a0" stroke-width="1"/>
+        <text x="145" y="220" font-family="Inter,sans-serif" font-size="10" font-weight="500" fill="#2dd4a0" text-anchor="middle">NetworkError</text>
+        <rect x="200" y="202" width="80" height="28" rx="5" fill="rgba(45,212,160,.08)" stroke="#2dd4a0" stroke-width="1"/>
+        <text x="240" y="220" font-family="Inter,sans-serif" font-size="10.5" font-weight="500" fill="#2dd4a0" text-anchor="middle">Error</text>
+
+        <text x="10" y="248" font-family="JetBrains Mono,monospace" font-size="8" fill="#2a4060" letter-spacing="1">PLATFORM</text>
+        <rect x="10" y="252" width="270" height="30" rx="5" fill="rgba(244,147,74,.08)" stroke="#f4934a" stroke-width="1"/>
+        <text x="145" y="271" font-family="Inter,sans-serif" font-size="11" font-weight="600" fill="#f4934a" text-anchor="middle">Winsock 2.2 · Windows</text>
+
+        <!-- Connecting lines -->
+        <g stroke="#2a4060" stroke-width="1" fill="none" marker-end="url(#arr)">
+          <line x1="80" y1="44" x2="51" y2="63"/><line x1="145" y1="44" x2="145" y2="63"/><line x1="210" y1="44" x2="239" y2="63"/>
+          <line x1="51" y1="92" x2="60" y2="113"/><line x1="145" y1="92" x2="130" y2="113"/><line x1="239" y1="92" x2="230" y2="113"/>
+          <line x1="90" y1="142" x2="118" y2="151"/><line x1="200" y1="142" x2="172" y2="151"/>
+          <line x1="90" y1="180" x2="80" y2="201"/><line x1="145" y1="180" x2="145" y2="201"/><line x1="200" y1="180" x2="220" y2="201"/>
+          <line x1="80" y1="230" x2="80" y2="251"/><line x1="145" y1="230" x2="145" y2="251"/><line x1="240" y1="230" x2="210" y2="251"/>
+        </g>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<div class="stats-row" id="stats"></div>
+<div id="mods"></div>
+<div id="empty">No functions match your search.</div>
+<footer>NetEngine C++ Networking Library · API Reference · Built from source headers</footer>
+</main>
+</div>
+
+<script>
+const D=[
+{id:'winsock',g:'Platform',ic:'⚡',h:'Winsock.hpp',t:'Winsock',
+d:'Manages the Winsock library lifetime via a guarded static flag. Must be initialized before any socket operations and cleaned up at application exit.',
+fns:[
+{n:'Initialize',r:'bool',st:1,p:[],d:'Calls WSAStartup(2.2). Guards against double-init with m_Initialized. Returns false and logs to cerr if startup fails.'},
+{n:'Cleanup',r:'void',st:1,p:[],d:'Calls WSACleanup() and resets m_Initialized to false. No-op if Initialize was never called.'}
+],
+ex:`if (!Winsock::Initialize()) {
+    std::cerr << "WSA init failed\\n";
+    return -1;
+}
+// ... all socket code runs here ...
+Winsock::Cleanup();`},
+
+{id:'address',g:'Core',ic:'📍',h:'Address.hpp',t:'Address',
+d:'Wraps sockaddr_in to represent an IPv4 endpoint. All fields are stored internally; callers retrieve a raw sockaddr* compatible with Winsock socket calls.',
+fns:[
+{n:'Address',r:'ctor',st:0,p:[],d:'Zero-initializes sockaddr_in via memset and sets sin_family to AF_INET.'},
+{n:'Address',r:'ctor',st:0,p:[['const std::string&','ip','in','IPv4 string, e.g. "127.0.0.1".'],['unsigned short','port','in','Port in host byte order.']],d:'Convenience overload — directly calls SetAddress(ip, port).'},
+{n:'SetAddress',r:'bool',st:0,p:[['const std::string&','ip','in','Passed to inet_pton(AF_INET). Must be a valid dotted-decimal string.'],['unsigned short','port','in','Stored as htons(port) in sin_port.']],d:'Zero-fills the struct, sets AF_INET and the converted port, then calls inet_pton. Returns false if inet_pton returns ≤ 0 (bad address format).'},
+{n:'GetSockAddr',r:'const sockaddr*',st:0,p:[],d:'Returns a pointer to the internal sockaddr_in cast to const sockaddr*. Use as the addr argument of connect(), bind(), sendto(), etc.'},
+{n:'GetLength',r:'int',st:0,p:[],d:'Returns sizeof(sockaddr_in). Pass this as the addrlen argument alongside GetSockAddr().'}
+],
+ex:`Address srv("192.168.1.10", 9000);
+socket.Connect(srv);
+
+// Or for a server:
+Address any("0.0.0.0", 9000);
+socket.Bind(any);`},
+
+{id:'socket',g:'Core',ic:'🔌',h:'Socket.hpp',t:'Socket',
+d:'Thread-safe RAII wrapper around a Winsock SOCKET handle. Supports client mode (Connect/Send/Receive) and server mode (Bind/Listen/Accept + session management). Move-only — copy is deleted.',
+enums:[
+{n:'SocketState',vals:['Closed','Created','Connected'],d:'Tracks socket lifecycle state.'},
+{n:'ReceiveResult',vals:['Success','ConnectionClosed','InvalidHeader','PayloadTooLarge','Timeout','ReceiveFailed'],d:'Detailed outcome of the last ReceivePacket call.'}
+],
+structs:[
+{n:'ClientSession',fields:[['uint32_t','SessionID — unique auto-incremented ID'],['SOCKET','SocketHandle — raw Winsock handle for this client'],['std::string','IPAddress — remote IP as string'],['uint16_t','port — remote port'],['uint64_t','LastBeaconTime — last activity timestamp'],['bool','IsActive — session health flag']]}
+],
+fns:[
+{grp:'Lifecycle',n:'Create',r:'bool',st:0,p:[['int','af','in','Address family (default AF_INET).'],['int','type','in','Socket type (default SOCK_STREAM).'],['int','protocol','in','Protocol (default IPPROTO_TCP).']],d:'Allocates the underlying SOCKET handle. Sets state to Created on success. Stores WSA error on failure.'},
+{grp:'Lifecycle',n:'Close',r:'void',st:0,p:[],d:'Shuts down and closes the socket handle, sets state to Closed. Safe to call multiple times.'},
+{grp:'Lifecycle',n:'isValid',r:'bool',st:0,p:[],d:'Returns true when the internal SOCKET handle is not INVALID_SOCKET.'},
+{grp:'Lifecycle',n:'IsConnected',r:'bool',st:0,p:[],d:'Returns true when the internal SocketState equals Connected.'},
+{grp:'Client I/O',n:'Connect',r:'bool',st:0,p:[['const Address&','address','in','Target endpoint wrapping a valid sockaddr_in.']],d:'Calls connect() with the sockaddr from address. On success advances state to Connected and clears last error.'},
+{grp:'Client I/O',n:'Send',r:'int',st:0,p:[['const void*','buffer','in','Pointer to data bytes to transmit.'],['int','length','in','Number of bytes to send.']],d:'Calls send(). Returns the number of bytes actually sent, or SOCKET_ERROR on failure (error stored internally).'},
+{grp:'Client I/O',n:'Receive',r:'int',st:0,p:[['void*','buffer','out','Destination buffer for incoming bytes.'],['int','length','in','Maximum byte count to receive.']],d:'Calls recv(). Returns bytes received, 0 on graceful close, or SOCKET_ERROR.'},
+{grp:'Server',n:'Bind',r:'bool',st:0,p:[['const Address&','address','in','Local endpoint to bind to (use 0.0.0.0 for any interface).']],d:'Calls bind(). Call after Create, before Listen.'},
+{grp:'Server',n:'Listen',r:'bool',st:0,p:[['int','backlog','in','Maximum length of the pending connection queue (default 5).']],d:'Calls listen() on the bound socket. Must be called after a successful Bind.'},
+{grp:'Server',n:'Accept',r:'Socket',st:0,p:[],d:'Calls accept() and returns a new Socket wrapping the accepted client handle. Returns an invalid Socket on error.'},
+{grp:'Server',n:'SetReceiveTimeout',r:'void',st:0,p:[['int','milliseconds','in','Timeout in ms. Pass 0 for blocking (infinite).']],d:'Sets SO_RCVTIMEO on the socket. Applies to all subsequent recv / ReceiveExact calls.'},
+{grp:'Server',n:'GetReceiveTimeout',r:'int',st:0,p:[],d:'Returns the receive timeout in milliseconds as last set via SetReceiveTimeout.'},
+{grp:'Packets',n:'ReceiveExact',r:'bool',st:0,p:[['void*','data','out','Destination buffer; must hold at least size bytes.'],['int','size','in','Exact byte count to read.']],d:'Loops on recv() until exactly size bytes have been received. Returns false on disconnect, timeout, or error.'},
+{grp:'Packets',n:'SendPacket',r:'bool',st:0,p:[['const Packet&','packet','in','Fully populated Packet to serialize and transmit.']],d:'Serializes a 12-byte ProtocolHeader, sends it, then sends the payload data. Both sends must succeed; last error is stored on failure.'},
+{grp:'Packets',n:'ReceivePacket',r:'bool',st:0,p:[['Packet&','packet','out','Receives header and payload data into this Packet.']],d:'Reads exactly 12 bytes for the header, validates magic/version/size, then reads the declared payload. Sets m_LastReceiveResult on every code path.'},
+{grp:'Error',n:'GetLastError',r:'int',st:0,p:[],d:'Returns the internally stored WSA error code from the most recent failed operation.'},
+{grp:'Error',n:'ClearLastError',r:'void',st:0,p:[],d:'Resets the stored error code to 0.'},
+{grp:'Error',n:'GetLastReceiveResult',r:'ReceiveResult',st:0,p:[],d:'Returns the ReceiveResult enum set by the most recent ReceivePacket call.'},
+{grp:'Protocol',n:'ProcessPingPong',r:'bool',st:0,p:[['const Packet&','receivedPacket','in','A just-received packet to inspect.']],d:'If the packet type is Ping, constructs a Pong response and sends it back. Returns true when the packet was consumed as Ping.'},
+{grp:'Sessions',n:'GetActiveSessions',r:'std::vector<ClientSession>',st:0,p:[],d:'Returns a mutex-protected snapshot of the active session list.'},
+{grp:'Sessions',n:'SendCommandToSession',r:'bool',st:0,p:[['uint32_t','sessionID','in','Target session ID returned by GetActiveSessions.'],['const Packet&','commandPacket','in','Command packet to dispatch.']],d:'Finds the session by ID and sends the packet over its raw SOCKET handle.'},
+{grp:'Sessions',n:'CheckSessionTimeouts',r:'void',st:0,p:[['uint64_t','timeoutSeconds','in','Idle threshold in seconds (default 15).']],d:'Marks sessions as inactive when their LastBeaconTime exceeds the threshold.'},
+{grp:'Sessions',n:'StartServer',r:'bool',st:0,p:[['const std::string&','ip','in','Bind address string (e.g. "0.0.0.0").'],['uint16_t','port','in','Port to listen on.']],d:'Creates, binds, and listens on the socket. Launches the timeout monitor thread. Returns false on any failure.'},
+{grp:'Sessions',n:'StopServer',r:'void',st:0,p:[],d:'Sets m_isRunning to false and joins all client and timeout threads.'},
+{grp:'Sessions',n:'ListenForClients',r:'void',st:0,p:[['PacketCallback','onPacketReceived','in','Called on the client thread for each received packet.']],d:'Blocking loop — calls Accept() and spawns a HandleClientThread per connection. PacketCallback signature: void(Socket& client, const Packet& pkt).'}
+],
+ex:`// ── server side ──────────────────────────────
+Winsock::Initialize();
+Socket server;
+server.StartServer("0.0.0.0", 9000);
+server.ListenForClients([](Socket& client, const Packet& pkt) {
+    std::cout << "Received type " << (int)pkt.GetType() << "\\n";
+    client.ProcessPingPong(pkt);
+});
+
+// ── client side ──────────────────────────────
+Socket client;
+client.Create();
+Address addr("127.0.0.1", 9000);
+if (client.Connect(addr)) {
+    Packet ping;
+    ping.SetType(PacketType::Ping);
+    client.SendPacket(ping);
+    Packet resp;
+    client.ReceivePacket(resp); // expect Pong
+}`},
+
+{id:'packet',g:'Packet Layer',ic:'📦',h:'Packet.hpp',t:'Packet',
+d:'Core serialization buffer with a sequential write/read cursor and packet type tagging. The buffer grows dynamically via std::vector<uint8_t>.',
+fns:[
+{grp:'Lifecycle',n:'Packet',r:'ctor',st:0,p:[],d:'Initializes the read cursor to 0 and leaves the buffer empty.'},
+{grp:'Lifecycle',n:'clear',r:'void',st:0,p:[],d:'Clears the internal buffer and resets the read cursor to 0.'},
+{grp:'Lifecycle',n:'Assign',r:'void',st:0,p:[['const void*','data','in','Source byte pointer.'],['std::size_t','size','in','Number of bytes to copy.']],d:'Replaces buffer contents with a copy of the given bytes and resets the read cursor.'},
+{grp:'Accessors',n:'Data',r:'const uint8_t*',st:0,p:[],d:'Returns a raw pointer to the first byte of the internal buffer.'},
+{grp:'Accessors',n:'Size',r:'std::size_t',st:0,p:[],d:'Returns the total byte count of the buffer.'},
+{grp:'Accessors',n:'GetPayloadSize',r:'uint32_t',st:0,p:[],d:'Returns buffer size cast to uint32_t — convenience alias for Size() for use in ProtocolHeader.PayloadSize.'},
+{grp:'Accessors',n:'SetType',r:'void',st:0,p:[['PacketType','type','in','Type tag to store.']],d:'Sets the internal type identifier. This field is separate from the byte buffer.'},
+{grp:'Accessors',n:'GetType',r:'PacketType',st:0,p:[],d:'Returns the stored packet type tag.'},
+{grp:'Write',n:'WriteBytes',r:'void',st:0,p:[['const void*','data','in','Source bytes.'],['std::size_t','size','in','Number of bytes to append.']],d:'Appends raw bytes to the end of the buffer via vector::insert.'},
+{grp:'Write',n:'WriteUInt32',r:'void',st:0,p:[['std::uint32_t','value','in','32-bit unsigned integer (host byte order).']],d:'Appends 4 bytes via WriteBytes. No endian conversion — both sides must agree.'},
+{grp:'Write',n:'WriteInt32',r:'void',st:0,p:[['std::int32_t','value','in','32-bit signed integer (host byte order).']],d:'Appends 4 bytes via WriteBytes.'},
+{grp:'Write',n:'WriteString',r:'void',st:0,p:[['const std::string&','text','in','String to serialize.']],d:'Writes a uint32 length prefix followed by the raw string bytes. Use ReadString to deserialize.'},
+{grp:'Read',n:'ReadBytes',r:'bool',st:0,p:[['void*','destination','out','Caller-allocated buffer to copy into.'],['std::size_t','size','in','Exact number of bytes to read.']],d:'Copies size bytes from the read cursor into destination and advances the cursor. Returns false if fewer than size bytes remain.'},
+{grp:'Read',n:'ReadUInt32',r:'bool',st:0,p:[['std::uint32_t&','value','out','Receives the deserialized value.']],d:'Reads 4 bytes into value via ReadBytes.'},
+{grp:'Read',n:'ReadString',r:'bool',st:0,p:[['std::string&','text','out','Receives the deserialized string.']],d:'Reads a uint32 length N, then reads N bytes into text. Returns false on under-run at either step.'},
+{grp:'Read',n:'PacketTypeToString',r:'const char*',st:0,p:[['PacketType','type','in','Type value to look up.']],d:'Returns "Ping", "Pong", "Command", or "Unknown". Note: source has a typo (PacketTypeToStirng).'}
+],
+notes:[
+{t:'warn',txt:'PacketTypeToString has a typo in the source file (Stirng). The function works correctly despite the name.'}
+],
+ex:`Packet pkt;
+pkt.SetType(PacketType::Command);
+pkt.WriteString("exec whoami");
+pkt.WriteUInt32(42);
+
+// Reset read cursor to replay
+pkt.Assign(pkt.Data(), pkt.Size());
+std::string cmd; uint32_t id;
+pkt.ReadString(cmd);   // "exec whoami"
+pkt.ReadUInt32(id);    // 42
+
+socket.SendPacket(pkt);`},
+
+{id:'packettype',g:'Packet Layer',ic:'🏷️',h:'PacketType.hpp',t:'PacketType',
+d:'Strongly-typed uint16_t enum identifying the kind of packet carried in a ProtocolHeader.',
+enums:[{n:'PacketType : uint16_t',vals:['Unknown=0','Handshake=1','Ping=2','Pong=3','Command / Beacon=4','Response / CommandReq=5','CommandResp=6','Disconnect=7'],d:''}],
+fns:[],
+notes:[{t:'warn',txt:'The enum has two sets of overlapping values: original (Command=4, Response=5) and extended (Beacon=4, CommandReq=5, CommandResp=6, Disconnect=7). The old names Command and Response are shadowed. Remove or rename them to avoid ambiguity.'}],
+ex:`PacketType t = PacketType::Handshake;
+pkt.SetType(t);
+socket.SendPacket(pkt);`},
+
+{id:'protocolheader',g:'Protocol',ic:'📋',h:'ProtocolHeader.hpp',t:'ProtocolHeader',
+d:'Fixed 12-byte header prepended to every transmitted packet. Fields must be converted to network byte order before transmission via ProtocolSerializer.',
+structs:[{n:'ProtocolHeader — wire layout (12 bytes)',fields:[['uint32_t','Magic = 0x4153434B  →  ASCII "ASCK"  (bytes 0–3)'],['uint16_t','Version = 1  (bytes 4–5)'],['PacketType','Type  (uint16_t, bytes 6–7)'],['uint32_t','PayloadSize  (bytes 8–11)']]}],
+fns:[],
+ex:`ProtocolHeader h;
+h.Type        = PacketType::Handshake;
+h.PayloadSize = static_cast<uint32_t>(payloadBytes.size());
+auto wire     = ProtocolSerializer::Serialize(h);
+socket.Send(wire.data(), (int)wire.size());`},
+
+{id:'protocolserializer',g:'Protocol',ic:'🔄',h:'ProtocolSerializer.hpp',t:'ProtocolSerializer',
+d:'Stateless wire-format converter. Serializes a ProtocolHeader to a 12-byte big-endian buffer and deserializes it back using the Endian utilities.',
+fns:[
+{n:'Serialize',r:'std::vector<uint8_t>',st:1,p:[['const ProtocolHeader&','header','in','Source header with host-order field values.']],d:'Converts Magic, Version, Type, and PayloadSize to network byte order via Endian helpers and writes them into a 12-byte buffer. Layout: [4 magic][2 version][2 type][4 payloadSize].'},
+{n:'Deserialize',r:'bool',st:1,p:[['const std::vector<uint8_t>&','data','in','Raw byte buffer; must be ≥ 12 bytes.'],['ProtocolHeader&','header','out','Populated with host-order values on success.']],d:'Reads 12 bytes, applies NetworkToHost conversions, and fills header. Returns false immediately if data.size() < 12.'}
+],
+ex:`// Transmit
+auto wire = ProtocolSerializer::Serialize(header);
+socket.Send(wire.data(), (int)wire.size());
+
+// Receive
+std::vector<uint8_t> buf(12);
+socket.ReceiveExact(buf.data(), 12);
+ProtocolHeader h;
+if (ProtocolSerializer::Deserialize(buf, h))
+    if (ProtocolValidator::Validate(h)) { /* process */ }`},
+
+{id:'protocolvalidator',g:'Protocol',ic:'✅',h:'ProtocolValidator.hpp',t:'ProtocolValidator',
+d:'Stateless single-method validator that checks a deserialized ProtocolHeader before it enters the processing pipeline.',
+fns:[
+{n:'Validate',r:'bool',st:1,p:[['const ProtocolHeader&','header','in','Header to inspect (must be in host byte order).']],d:'Fails if: Magic ≠ 0x4153434B, Version ≠ 1, Type == Unknown, or PayloadSize > 1 MiB (1048576 bytes). Returns true only when all checks pass.'}
+],
+ex:`ProtocolHeader h;
+ProtocolSerializer::Deserialize(raw, h);
+if (!ProtocolValidator::Validate(h)) {
+    // drop — bad magic, wrong version, or oversized payload
+    return;
+}
+// safe to dispatch`},
+
+{id:'endian',g:'Utilities',ic:'↔️',h:'Endian.hpp',t:'Endian',
+d:'Wraps the standard Winsock byte-order functions (htons / htonl / ntohs / ntohl) under a clean typed interface for 16-bit and 32-bit values.',
+fns:[
+{n:'HostToNetwork16',r:'uint16_t',st:1,p:[['uint16_t','value','in','16-bit value in host byte order.']],d:'Returns htons(value). Converts little-endian host to big-endian network order.'},
+{n:'HostToNetwork32',r:'uint32_t',st:1,p:[['uint32_t','value','in','32-bit value in host byte order.']],d:'Returns htonl(value).'},
+{n:'NetworkToHost16',r:'uint16_t',st:1,p:[['uint16_t','value','in','16-bit value in network byte order.']],d:'Returns ntohs(value). Converts big-endian wire bytes back to host order.'},
+{n:'NetworkToHost32',r:'uint32_t',st:1,p:[['uint32_t','value','in','32-bit value in network byte order.']],d:'Returns ntohl(value).'}
+],
+ex:`uint32_t magic = 0x4153434B;
+uint32_t wire   = Endian::HostToNetwork32(magic);
+uint32_t back   = Endian::NetworkToHost32(wire);
+// back == magic (0x4153434B)`},
+
+{id:'networkerror',g:'Utilities',ic:'⚠️',h:'NetworkError.hpp',t:'NetworkError',
+d:'Maps Winsock integer error codes to bracketed human-readable strings. Covers 40+ codes across 9 categories: init, connection, socket state, addressing, memory/buffers, routing, protocol, DNS, and overlapped I/O.',
+fns:[
+{n:'GetErrorMessage',r:'std::string',st:1,p:[['int','errorCode','in','Winsock error code, e.g. from WSAGetLastError().']],d:'Switch-case returning a formatted string of the form "[NET_CAT_CODE] Description.". Falls back to "[NET_ERR_UNKNOWN] Unhandled Winsock error code: N" for unrecognised codes.'}
+],
+ex:`int code = WSAGetLastError();
+std::string msg = NetworkError::GetErrorMessage(code);
+std::cerr << msg << "\\n";
+// e.g. "[NET_CONN_REFUSED] Connection actively refused by target server."`},
+
+{id:'error',g:'Utilities',ic:'🔴',h:'Error.hpp',t:'Error',
+d:'Platform-agnostic static interface for the last error code and its message string. Acts as a thin abstraction layer over the platform error API.',
+fns:[
+{n:'GetCode',r:'int',st:1,p:[],d:'Returns the last error code for the current context.'},
+{n:'GetMessage',r:'std::string',st:1,p:[],d:'Returns the human-readable message for the last error.'}
+],
+ex:`if (!someOperation()) {
+    std::cerr << "[" << Error::GetCode() << "] "
+              << Error::GetMessage() << "\\n";
+}`}
+];
+
+// helpers
+const e=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function hl(s){return e(s).replace(/(\/\/[^\n]*)/g,'<span class=cm2>$1</span>').replace(/"([^"]*)"/g,'<span class=st2>"$1"</span>').replace(/\b(if|else|return|const|auto|for|while|nullptr|true|false|static|class|struct|enum|public|private|using|namespace|void|bool|int|uint32_t|uint16_t|uint8_t|uint64_t|std)\b/g,'<span class=kw>$1</span>').replace(/\b([A-Z]\w+)(?=::)/g,'<span class=ty2>$1</span>').replace(/\b([a-zA-Z_]\w*)(?=\()/g,'<span class=fn2>$1</span>')}
+function retBar(r){if(!r||r==='ctor'||r==='void')return 'c-wh';if(r==='bool')return 'c-gn';if(r==='int')return 'c-or';if(r.includes('vector'))return 'c-cy';if(r.includes('*')||r==='PacketType'||r==='ReceiveResult'||r==='Socket')return 'c-pu';return 'c-bl'}
+function retBadge(r){const c={bool:'gb',void:'vb',ctor:'vb',int:'ob'}[r]||(r.includes('vector')?'cb':r.includes('*')||['PacketType','ReceiveResult','Socket','std::string','uint16_t','uint32_t','std::size_t'].includes(r)?'pb':'ob');return`<span class="fnret ${c}">${e(r||'ctor')}</span>`}
+function sig(m,f){const nm=f.n.split(' / ')[0],ps=f.p.map(p=>`\n    ${e(p[0])} ${e(p[1])}`).join(','),cl=f.p.length?'\n)':')';const ret=f.r&&f.r!=='ctor'?`<span class=kw>${e(f.r)}</span> `:'';return`${ret}<span class=ty2>${e(m.id)}</span><span style="color:var(--dim)">::</span><span class=fn2>${e(nm)}</span>(${ps}${cl};`}
+function mkCB(src,lbl){return`<div class="cb"><div class="cbh"><span class="file">${lbl}</span><button class="cpc" data-c="${encodeURIComponent(src)}"><svg><use href="#i-copy"/></svg>Copy</button></div><pre><code>${hl(src)}</code></pre></div>`}
+
+// stats
+const totalFns=D.reduce((a,m)=>a+m.fns.length,0),totalP=D.reduce((a,m)=>a+m.fns.reduce((b,f)=>b+f.p.length,0),0);
+document.getElementById('stats').innerHTML=[[D.length,'modules'],[totalFns,'functions'],[totalP,'parameters'],['TCP/IP','protocol stack'],['Windows','platform']].map(s=>`<div class="stat"><strong>${s[0]}</strong><span>${s[1]}</span></div>`).join('');
+
+// sidebar
+const groups=[...new Set(D.map(m=>m.g))];
+let nav='';
+groups.forEach(g=>{
+  nav+=`<h6>${g}</h6>`;
+  D.filter(m=>m.g===g).forEach(m=>{
+    nav+=`<a href="#${m.id}" data-m="${m.id}">${m.ic} ${m.t}</a>`;
+    m.fns.slice(0,5).forEach(f=>nav+=`<a class="sf" href="#${m.id}">${f.n.split(' / ')[0]}</a>`);
+    if(m.fns.length>5) nav+=`<a class="sf" href="#${m.id}">+${m.fns.length-5} more</a>`;
+  });
+});
+document.getElementById('nav').innerHTML=nav;
+
+// build modules
+let html='';
+D.forEach(m=>{
+  let eH='';
+  if(m.enums) m.enums.forEach(en=>eH+=`<div class="typedef"><div class="tdlabel">enum class <span>${en.n}</span></div><div class="ev">${en.vals.map(v=>`<span>${e(v)}</span>`).join('')}</div></div>`);
+  if(m.structs) m.structs.forEach(s=>eH+=`<div class="typedef"><div class="tdlabel">struct <span>${s.n}</span></div><div class="sfields">${s.fields.map(f=>`<span class="sf-t">${e(f[0])}</span><span class="sf-d">${e(f[1])}</span>`).join('')}</div></div>`);
+
+  const grps=[...new Set(m.fns.map(f=>f.grp||''))];
+  let fH='';
+  grps.forEach(grp=>{
+    if(grp) fH+=`<div class="fng">${grp}</div>`;
+    m.fns.filter(f=>(f.grp||'')===grp).forEach(f=>{
+      const bar=retBar(f.r);
+      const pt=f.p.length?`<div class="pt-wrap"><table class="pt"><thead><tr><th>Parameter</th><th>Type</th><th>Direction</th><th>Description</th></tr></thead><tbody>${f.p.map(p=>`<tr><td><span class="pn">${e(p[1])}</span></td><td><span class="ty">${e(p[0])}</span></td><td><span class="dr ${p[2]}">${p[2]}</span></td><td class="di">${p[3]}</td></tr>`).join('')}</tbody></table></div>`:'';
+      fH+=`<article class="fn" data-s="${(m.id+' '+f.n+' '+f.d+' '+f.p.map(p=>p.join(' ')).join(' ')).toLowerCase()}"><div class="fnbar ${bar}"></div><div class="fnbd"><div class="fntop">${f.st?`<span class="fnst">static</span>`:''}<span class="fnname">${e(f.n)}</span>${retBadge(f.r)}</div><div class="fnsig">${sig(m,f)}</div><p class="fndesc">${f.d}</p>${pt}</div></article>`;
+    });
+  });
+
+  let nH='';
+  if(m.notes) m.notes.forEach(n=>nH+=`<div class="note ${n.t}"><svg><use href="#i-${n.t==='warn'?'warn':'info'}"/></svg><span>${n.txt}</span></div>`);
+
+  html+=`<section class="mod" id="${m.id}" data-mod="${m.id}">
+    <div class="mhead"><div class="mic">${m.ic}</div><div class="minfo"><h2>${m.t}</h2><div class="inc">#include "${m.h}"</div></div></div>
+    <p class="mdesc">${m.d}</p>${eH}${m.fns.length?`<div class="fng">Functions</div>${fH}`:''}${nH}${m.ex?mkCB(m.ex,m.h.replace('.hpp','.cpp')):''}
+  </section>`;
+});
+document.getElementById('mods').innerHTML=html;
+
+// search
+const q=document.getElementById('q'),scl=document.getElementById('scl'),rc=document.getElementById('rc');
+function search(){
+  const v=q.value.trim().toLowerCase();let n=0;
+  document.querySelectorAll('section.mod[id]').forEach(sec=>{
+    let m=0;
+    sec.querySelectorAll('article.fn').forEach(card=>{const h=!!v&&!card.dataset.s.includes(v);card.style.display=h?'none':'';if(!h)m++});
+    const noFns=sec.querySelectorAll('article.fn').length===0;
+    sec.style.display=(v&&!m&&!noFns)?'none':'';n+=m||(noFns?1:0);
+  });
+  document.getElementById('empty').style.display=n?'none':'block';
+  scl.style.display=v?'flex':'none';rc.textContent=v?(n+' found'):'';
+}
+q.addEventListener('input',search);
+scl.onclick=()=>{q.value='';search();q.focus()};
+document.addEventListener('keydown',ev=>{
+  if(ev.key==='/'&&document.activeElement!==q){ev.preventDefault();q.focus()}
+  if(ev.key==='Escape'&&document.activeElement===q){q.value='';search();q.blur()}
+});
+
+// copy
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('.cpc');if(!b)return;
+  navigator.clipboard?.writeText(decodeURIComponent(b.dataset.c));
+  b.innerHTML='<svg><use href="#i-check"/></svg>Copied';
+  setTimeout(()=>b.innerHTML='<svg><use href="#i-copy"/></svg>Copy',1600);
+});
+
+// mobile nav
+document.getElementById('mb').onclick=()=>document.getElementById('nav').classList.toggle('open');
+document.querySelectorAll('nav a').forEach(a=>a.addEventListener('click',()=>document.getElementById('nav').classList.remove('open')));
+
+// theme
+const root=document.documentElement,tb=document.getElementById('thm');
+const setT=t=>{root.setAttribute('data-t',t);tb.innerHTML=`<svg><use href="#i-${t==='dark'?'sun':'moon'}"/></svg>`};
+setT(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+tb.onclick=()=>setT(root.getAttribute('data-t')==='dark'?'light':'dark');
+
+// active nav
+const navLinks=[...document.querySelectorAll('nav a[data-m]')];
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)navLinks.forEach(l=>l.classList.toggle('on',l.dataset.m===e.target.id))}),{rootMargin:'-20% 0px -65% 0px'});
+document.querySelectorAll('section.mod[id]').forEach(s=>io.observe(s));
+</script>
+</body>
+</html>
